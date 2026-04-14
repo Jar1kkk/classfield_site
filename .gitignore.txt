@@ -1,0 +1,23 @@
+# =========================
+# Python / Django (Backend)
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+db.sqlite3
+media/
+staticfiles/
+
+# =========================
+# Node / React (Frontend)
+# =========================
+node_modules/
+npm-debug.log
+yarn-error.log
+build/
+dist/
+.env.local
+.DS_Store
