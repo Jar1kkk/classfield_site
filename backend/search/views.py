@@ -1,17 +1,15 @@
 from rest_framework import generics, permissions
 from listings.models import Listing
 from listings.serializers import ListingSerializer
-from .filters import ListingFilter
 from listings.views import ListingPagination
+from .filters import ListingFilter
 
 
 class SearchView(generics.ListAPIView):
-    pagination_class = ListingPagination
     serializer_class = ListingSerializer
     permission_classes = [permissions.AllowAny]
     filterset_class = ListingFilter
-    ordering_fields = ['price', 'created_at', 'views_count']
-    ordering = ['-created_at']
+    pagination_class = ListingPagination
 
     def get_queryset(self):
         queryset = Listing.objects.filter(status='active') \
@@ -23,3 +21,8 @@ class SearchView(generics.ListAPIView):
             queryset = queryset.order_by(ordering)
 
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context

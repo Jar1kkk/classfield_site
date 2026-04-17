@@ -4,6 +4,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
+from listings.models import Listing, Category
+
 
 User = get_user_model()
 
@@ -51,3 +55,74 @@ class UserPublicProfileView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_stats(request):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    return Response({
+        'users': User.objects.count(),
+        'listings': Listing.objects.count(),
+        'active_listings': Listing.objects.filter(status='active').count(),
+        'sold_listings': Listing.objects.filter(status='sold').count(),
+        'archived_listings': Listing.objects.filter(status='archived').count(),
+        'categories': Category.objects.count(),
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_listings(request):
+    listings = Listing.objects.all().select_related('user', 'category').order_by('-created_at')
+    from listings.serializers import ListingSerializer
+    serializer = ListingSerializer(listings, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_users(request):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    users = User.objects.all().order_by('-created_at')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def admin_listing_status(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    status_val = request.data.get('status')
+    if status_val in ['active', 'sold', 'archived']:
+        listing.status = status_val
+        listing.save(update_fields=['status'])
+        return Response({'status': listing.status})
+    return Response({'error': 'Невірний статус'}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def admin_delete_listing(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    listing.delete()
+    return Response({'message': 'Видалено'}, status=204)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAdminUser])
+def admin_categories(request):
+    from listings.models import Category
+    from listings.serializers import CategorySerializer
+    if request.method == 'GET':
+        cats = Category.objects.all()
+        return Response(CategorySerializer(cats, many=True).data)
+    serializer = CategorySerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status=201)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def admin_delete_category(request, pk):
+    from listings.models import Category
+    cat = get_object_or_404(Category, pk=pk)
+    cat.delete()
+    return Response({'message': 'Видалено'}, status=204)

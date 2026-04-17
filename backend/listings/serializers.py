@@ -38,24 +38,22 @@ class ListingSerializer(serializers.ModelSerializer):
 
 
 class ListingCreateSerializer(serializers.ModelSerializer):
-    images = serializers.ListField(
-        child=serializers.ImageField(), write_only=True, required=False
-    )
-
     class Meta:
         model = Listing
-        fields = ['category', 'title', 'description', 'price', 'condition', 'city', 'images']
+        fields = ['category', 'title', 'description', 'price', 'condition', 'city']
 
     def create(self, validated_data):
-        images_data = validated_data.pop('images', [])
+        request = self.context.get('request')
         listing = Listing.objects.create(**validated_data)
-        for i, image in enumerate(images_data):
-            Image.objects.create(
-                listing=listing,
-                image=image,
-                is_main=(i == 0),
-                order=i
-            )
+        if request:
+            images = request.FILES.getlist('images')
+            for i, image in enumerate(images):
+                Image.objects.create(
+                    listing=listing,
+                    image=image,
+                    is_main=(i == 0),
+                    order=i
+                )
         return listing
 
 
@@ -65,3 +63,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ['id', 'listing', 'created_at']
+
+class ImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Image
+        fields = ['id', 'image', 'is_main', 'order']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if request and obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url if obj.image else None

@@ -2,7 +2,9 @@ import api from './axios'
 
 export const getListings = (params) => api.get('/listings/', { params })
 export const getListing = (id) => api.get(`/listings/${id}/`)
-export const createListing = (data) => api.post('/listings/create/', data)
+export const createListing = (data) => api.post('/listings/create/', data, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+})
 export const updateListing = (id, data) => api.patch(`/listings/${id}/`, data)
 export const deleteListing = (id) => api.delete(`/listings/${id}/`)
 export const getMyListings = () => api.get('/listings/my/')

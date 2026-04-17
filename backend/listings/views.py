@@ -35,6 +35,11 @@ class ListingListView(generics.ListAPIView):
     def get_queryset(self):
         return Listing.objects.filter(status='active').select_related('user', 'category').prefetch_related('images')
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
 
 class ListingCreateView(generics.CreateAPIView):
     serializer_class = ListingCreateSerializer
@@ -42,6 +47,11 @@ class ListingCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 
 class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -59,6 +69,11 @@ class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.save(update_fields=['views_count'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 
 class MyListingsView(generics.ListAPIView):
