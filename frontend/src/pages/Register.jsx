@@ -14,6 +14,8 @@ export default function Register() {
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -73,26 +75,34 @@ export default function Register() {
           </div>
           <div className="form-group">
             <label>Пароль</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="мінімум 8 символів"
-              required
-            />
+            <div className="input-password">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="мінімум 8 символів"
+                required
+              />
+              <button type="button" className="input-password__toggle" onClick={() => setShowPassword(p => !p)}>
+                {showPassword ? '🙈' : '👁'}
+              </button>
+            </div>
             {errors.password && <span className="field-error">{errors.password}</span>}
           </div>
+
           <div className="form-group">
             <label>Повторіть пароль</label>
-            <input
-              type="password"
-              name="password2"
-              value={form.password2}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
+            <div className="input-password">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password2"
+                value={form.password2}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+              />
+            </div>
             {errors.password2 && <span className="field-error">{errors.password2}</span>}
           </div>
           <button type="submit" className="btn btn--primary btn--full" disabled={loading}>

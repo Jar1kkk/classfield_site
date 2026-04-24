@@ -10,6 +10,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -53,14 +54,19 @@ export default function Login() {
           </div>
           <div className="form-group">
             <label>Пароль</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-            />
+            <div className="input-password">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+              />
+              <button type="button" className="input-password__toggle" onClick={() => setShowPassword(p => !p)}>
+                {showPassword ? '🙈' : '👁'}
+              </button>
+            </div>
           </div>
           {error && <p className="auth-error">{error}</p>}
           <button type="submit" className="btn btn--primary btn--full" disabled={loading}>

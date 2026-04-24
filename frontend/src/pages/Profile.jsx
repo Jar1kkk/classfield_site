@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getProfile, updateProfile } from '../api/auth'
+import { getProfile, updateProfile, uploadAvatar } from '../api/auth'
 import { getMyListings, deleteListing } from '../api/listings'
+
 
 export default function Profile() {
   const { user, setUser, logoutUser } = useAuth()
@@ -11,6 +12,7 @@ export default function Profile() {
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [avatarLoading, setAvatarLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const [form, setForm] = useState({
     username: '',
@@ -50,6 +52,20 @@ export default function Profile() {
     }
   }
 
+  const handleAvatar = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setAvatarLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const res = await uploadAvatar(formData)
+      setUser((prev) => ({ ...prev, avatar: res.data.avatar }))
+    } finally {
+      setAvatarLoading(false)
+    }
+  }
+
   const handleDelete = async (id) => {
     if (!window.confirm('Видалити оголошення?')) return
     await deleteListing(id)
@@ -64,18 +80,26 @@ export default function Profile() {
   return (
     <div className="profile-page">
       <div className="profile-header">
-        <div className="profile-avatar">
-          {user?.avatar ? (
-            <img src={user.avatar} alt="avatar" />
-          ) : (
-            <div className="profile-avatar__placeholder">
-              {user?.username?.[0]?.toUpperCase()}
+        <div className="profile-avatar" style={{ position: 'relative', cursor: 'pointer' }}>
+          <label htmlFor="avatar-input" style={{ cursor: 'pointer' }}>
+            {user?.avatar ? (
+              <img src={user.avatar} alt="avatar" />
+            ) : (
+              <div className="profile-avatar__placeholder">
+                {user?.username?.[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="profile-avatar__overlay">
+              {avatarLoading ? '...' : '📷'}
             </div>
-          )}
-        </div>
-        <div>
-          <h1>{user?.username}</h1>
-          <p className="profile-email">{user?.email}</p>
+          </label>
+          <input
+            id="avatar-input"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatar}
+          />
         </div>
       </div>
 

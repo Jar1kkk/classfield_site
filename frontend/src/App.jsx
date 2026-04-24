@@ -10,6 +10,10 @@ import EditListing from './pages/EditListing'
 import Favorites from './pages/Favorites'
 import AdminPanel from './pages/AdminPanel'
 import Profile from './pages/Profile'
+import Footer from './components/Footer'
+import Chat from './pages/Chat'
+import PublicProfile from './pages/PublicProfile'
+import { NotifProvider } from './context/NotifContext'
 
 
 
@@ -17,18 +21,25 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/listings/create" element={<CreateListing />} />
-          <Route path="/listings/:id" element={<ListingDetail />} />
-          <Route path="/listings/:id/edit" element={<EditListing />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/admin-panel" element={<AdminPanel />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
+        <NotifProvider>
+          <Navbar />
+          <div style={{ flex:1 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/listings/create" element={<CreateListing />} />
+              <Route path="/listings/:id" element={<ListingDetail />} />
+              <Route path="/listings/:id/edit" element={<EditListing />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/admin-panel" element={<AdminPanel />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/users/:id" element={<PublicProfile />} />
+            </Routes>
+          </div>
+          <Footer />
+        </NotifProvider>
       </BrowserRouter>
     </AuthProvider>
   )

@@ -7,6 +7,7 @@ from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSeria
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from listings.models import Listing, Category
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 User = get_user_model()
@@ -55,6 +56,18 @@ class UserPublicProfileView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+
+class AvatarUploadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        avatar = request.FILES.get('avatar')
+        if not avatar:
+            return Response({'error': 'Файл не вибрано'}, status=400)
+        request.user.avatar = avatar
+        request.user.save(update_fields=['avatar'])
+        return Response({'avatar': request.build_absolute_uri(request.user.avatar.url)})
 
 
 @api_view(['GET'])

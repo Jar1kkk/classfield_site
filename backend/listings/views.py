@@ -8,6 +8,61 @@ from .serializers import (
     ListingCreateSerializer, FavoriteSerializer
 )
 from rest_framework.pagination import PageNumberPagination
+from search.filters import ListingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Image
+from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import ImageSerializer
+
+class ListingImageDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk, image_pk):
+        listing = get_object_or_404(Listing, pk=pk)
+        if listing.user != request.user and not request.user.is_staff:
+            return Response({'error': 'Немає доступу'}, status=status.HTTP_403_FORBIDDEN)
+        image = get_object_or_404(Image, pk=image_pk, listing=listing)
+        image.image.delete(save=False)
+        image.delete()
+        return Response({'message': 'Видалено'}, status=status.HTTP_204_NO_CONTENT)
+    
+class ListingImageAddView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk):
+        listing = get_object_or_404(Listing, pk=pk)
+        if listing.user != request.user and not request.user.is_staff:
+            return Response({'error': 'Немає доступу'}, status=status.HTTP_403_FORBIDDEN)
+        images = request.FILES.getlist('images')
+        if not images:
+            return Response({'error': 'Файли не вибрані'}, status=status.HTTP_400_BAD_REQUEST)
+        current_count = listing.images.count()
+        if current_count + len(images) > 5:
+            return Response({'error': f'Максимум 5 фото. Зараз є {current_count}'}, status=status.HTTP_400_BAD_REQUEST)
+        created = []
+        for i, image in enumerate(images):
+            img = Image.objects.create(
+                listing=listing,
+                image=image,
+                is_main=(current_count == 0 and i == 0),
+                order=current_count + i
+            )
+            created.append(ImageSerializer(img, context={'request': request}).data)
+        return Response(created, status=status.HTTP_201_CREATED)
+    
+class ListingImageSetMainView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, image_pk):
+        listing = get_object_or_404(Listing, pk=pk)
+        if listing.user != request.user and not request.user.is_staff:
+            return Response({'error': 'Немає доступу'}, status=status.HTTP_403_FORBIDDEN)
+        listing.images.update(is_main=False)
+        image = get_object_or_404(Image, pk=image_pk, listing=listing)
+        image.is_main = True
+        image.save()
+        return Response({'message': 'Головне фото встановлено'})
 
 class ListingPagination(PageNumberPagination):
     page_size = 12
@@ -31,9 +86,19 @@ class ListingListView(generics.ListAPIView):
     serializer_class = ListingSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = ListingPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ListingFilter
 
     def get_queryset(self):
-        return Listing.objects.filter(status='active').select_related('user', 'category').prefetch_related('images')
+        queryset = Listing.objects.filter(status='active') \
+            .select_related('user', 'category') \
+            .prefetch_related('images')
+
+        ordering = self.request.query_params.get('ordering')
+        if ordering in ['price', '-price', 'created_at', '-created_at', 'views_count', '-views_count']:
+            queryset = queryset.order_by(ordering)
+
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

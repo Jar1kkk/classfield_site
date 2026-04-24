@@ -5,11 +5,20 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'phone', 'avatar', 'city', 'bio', 'created_at', 'is_staff']
         read_only_fields = ['id', 'created_at', 'is_staff']
 
+    def get_avatar(self, obj):
+        if not obj.avatar:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.avatar.url)
+        return f'http://127.0.0.1:8000{obj.avatar.url}'
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)

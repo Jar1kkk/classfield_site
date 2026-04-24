@@ -6,6 +6,7 @@ from .views import (
     admin_stats, admin_listings, admin_users, admin_listing_status,
     admin_delete_listing, admin_categories, admin_delete_category
 )
+from .views import AvatarUploadView
 
 
 urlpatterns = [
@@ -22,4 +23,5 @@ urlpatterns = [
     path('admin/users/', admin_users, name='admin_users'),
     path('admin/categories/', admin_categories, name='admin_categories'),
     path('admin/categories/<int:pk>/', admin_delete_category, name='admin_delete_category'),
+    path('profile/avatar/', AvatarUploadView.as_view(), name='avatar_upload'),
 ]

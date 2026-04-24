@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     CategoryListView, ListingListView, ListingCreateView,
-    ListingDetailView, MyListingsView, FavoriteListView, FavoriteToggleView
+    ListingDetailView, MyListingsView, FavoriteListView, FavoriteToggleView,
+    ListingImageDeleteView, ListingImageAddView, ListingImageSetMainView
 )
 
 urlpatterns = [
@@ -12,4 +13,7 @@ urlpatterns = [
     path('my/', MyListingsView.as_view(), name='my_listings'),
     path('favorites/', FavoriteListView.as_view(), name='favorites'),
     path('<int:pk>/favorite/', FavoriteToggleView.as_view(), name='favorite_toggle'),
+    path('<int:pk>/images/add/', ListingImageAddView.as_view(), name='listing_image_add'),
+    path('<int:pk>/images/<int:image_pk>/delete/', ListingImageDeleteView.as_view(), name='listing_image_delete'),
+    path('<int:pk>/images/<int:image_pk>/main/', ListingImageSetMainView.as_view(), name='listing_image_main'),
 ]

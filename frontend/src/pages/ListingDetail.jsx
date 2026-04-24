@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getListing, toggleFavorite, deleteListing } from '../api/listings'
 import { useAuth } from '../context/AuthContext'
+import { startConversation } from '../api/chat'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -29,6 +30,12 @@ export default function ListingDetail() {
       await toggleFavorite(id)
       setFavorited((prev) => !prev)
     } catch {}
+  }
+
+  const handleChat = async () => {
+    if (!user) return navigate('/login')
+     const res = await startConversation(id)
+    navigate(`/chat?conv=${res.data.id}`)
   }
 
   const handleDelete = async () => {
@@ -115,7 +122,9 @@ export default function ListingDetail() {
                 )}
               </div>
               <div>
-                <p className="detail-seller__name">{listing.user?.username}</p>
+                <Link to={`/users/${listing.user?.id}`} className="detail-seller__name">
+                  {listing.user?.username}
+                </Link>
                 <p className="detail-seller__city">{listing.user?.city || 'Місто не вказано'}</p>
               </div>
             </div>
@@ -129,13 +138,20 @@ export default function ListingDetail() {
           {/* Дії */}
           <div className="detail-actions">
             {!isOwner && (
-              <button
-                className={`btn ${favorited ? 'btn--favorited' : 'btn--outline'} btn--full`}
-                onClick={handleFavorite}
-              >
-                {favorited ? '❤️ В обраному' : '🤍 Додати в обране'}
-              </button>
+              <>
+                <button
+                  className={`btn ${favorited ? 'btn--favorited' : 'btn--outline'} btn--full`}
+                  onClick={handleFavorite}
+                >
+                  {favorited ? '❤️ В обраному' : '🤍 Додати в обране'}
+                </button>
+                <button className="btn btn--primary btn--full" onClick={handleChat}>
+                  💬 Написати продавцю
+                </button>
+              </>
             )}
+
+
             {isOwner && (
               <div className="detail-owner-actions">
                 <Link to={`/listings/${id}/edit`} className="btn btn--outline btn--full">
