@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from .models import Conversation, Message
+from .models import Conversation, Message, Notification
 from .serializers import ConversationSerializer, MessageSerializer
 from listings.models import Listing
 
@@ -90,3 +90,39 @@ class UnreadCountView(APIView):
             is_read=False
         ).exclude(sender=request.user).count()
         return Response({'unread': count})
+    
+
+class NotificationListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        notifications = Notification.objects.filter(
+            user=request.user
+        ).select_related('listing')[:20]
+
+        data = [{
+            'id': n.id,
+            'type': n.type,
+            'text': n.text,
+            'is_read': n.is_read,
+            'listing_id': n.listing_id,
+            'listing_title': n.listing.title if n.listing else None,
+            'created_at': n.created_at,
+        } for n in notifications]
+
+        # позначаємо як прочитані
+        Notification.objects.filter(
+            user=request.user, is_read=False
+        ).update(is_read=True)
+
+        return Response(data)
+
+
+class NotificationCountView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        count = Notification.objects.filter(
+            user=request.user, is_read=False
+        ).count()
+        return Response({'count': count})

@@ -1107,3 +1107,47 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   justify-content: center;
 }
+.detail-status-sold {
+  display: inline-block;
+  background: #e63946;
+  color: white;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+.detail-status-archived {
+  display: inline-block;
+  background: #888;
+  color: white;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+/* Notifications */
+.notif-page {
+  max-width: 700px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+.notif-page h1 { font-size: 1.5rem; margin-bottom: 24px; }
+.notif-list { display: flex; flex-direction: column; gap: 8px; }
+.notif-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.notif-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.notif-item__icon { font-size: 1.4rem; flex-shrink: 0; }
+.notif-item__body { flex: 1; }
+.notif-item__text { font-size: 0.9rem; color: #333; margin-bottom: 4px; }
+.notif-item__time { font-size: 0.78rem; color: #aaa; }

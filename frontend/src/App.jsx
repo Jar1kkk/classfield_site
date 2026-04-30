@@ -14,7 +14,7 @@ import Footer from './components/Footer'
 import Chat from './pages/Chat'
 import PublicProfile from './pages/PublicProfile'
 import { NotifProvider } from './context/NotifContext'
-
+import Notifications from './pages/Notifications'
 
 
 export default function App() {
@@ -36,6 +36,7 @@ export default function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/users/:id" element={<PublicProfile />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Routes>
           </div>
           <Footer />

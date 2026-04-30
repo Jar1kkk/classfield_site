@@ -2,11 +2,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotif } from '../context/NotifContext'
 
-
 export default function Navbar() {
   const { user, logoutUser } = useAuth()
   const navigate = useNavigate()
-  const { unread } = useNotif()
+  const { unread, notifCount } = useNotif()
 
   const handleLogout = () => {
     logoutUser()
@@ -35,6 +34,10 @@ export default function Navbar() {
                     {unread}
                   </span>
                 )}
+              </Link>
+              <Link to="/notifications" className="navbar__link navbar__chat-link">
+                🔔
+                {notifCount > 0 && <span className="navbar__badge">{notifCount}</span>}
               </Link>
               <Link to="/favorites" className="navbar__link">Обране</Link>
               {user?.is_staff && (

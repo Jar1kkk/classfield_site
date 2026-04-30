@@ -1,4 +1,6 @@
 import api from './axios'
+export const getNotifications = () => api.get('/chat/notifications/')
+export const getNotificationCount = () => api.get('/chat/notifications/count/')
 
 export const getConversations = () => api.get('/chat/')
 export const startConversation = (listingId) => api.post(`/chat/start/${listingId}/`)

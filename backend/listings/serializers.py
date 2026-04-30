@@ -10,9 +10,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Image
         fields = ['id', 'image', 'is_main', 'order']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if request and obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url if obj.image else None
 
 
 class ListingSerializer(serializers.ModelSerializer):
@@ -40,7 +48,7 @@ class ListingSerializer(serializers.ModelSerializer):
 class ListingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
-        fields = ['category', 'title', 'description', 'price', 'condition', 'city']
+        fields = ['category', 'title', 'description', 'price', 'condition', 'city', 'status']
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -63,16 +71,3 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ['id', 'listing', 'created_at']
-
-class ImageSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Image
-        fields = ['id', 'image', 'is_main', 'order']
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if request and obj.image:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None

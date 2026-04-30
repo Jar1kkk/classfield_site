@@ -34,3 +34,26 @@ class Message(models.Model):
 
     def __str__(self):
         return f'{self.sender}: {self.text[:40]}'
+    
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('listing_sold', 'Товар продано'),
+        ('new_message', 'Нове повідомлення'),
+    ]
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+    type = models.CharField(max_length=30, choices=TYPE_CHOICES)
+    text = models.TextField()
+    listing = models.ForeignKey(
+        'listings.Listing',
+        on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

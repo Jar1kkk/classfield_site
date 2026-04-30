@@ -134,7 +134,46 @@ class ListingDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.save(update_fields=['views_count'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_status = instance.status
+        response = super().partial_update(request, *args, **kwargs)
+        instance.refresh_from_db()
+        new_status = instance.status
+
+        # надсилаємо сповіщення якщо статус змінився на "sold"
+        if old_status != 'sold' and new_status == 'sold':
+            self._notify_sold(instance)
+
+        return response
+
+    def _notify_sold(self, listing):
+        from chat.models import Notification
+        from django.db.models import Q
+        from chat.models import Conversation
+        from listings.models import Favorite
+
+        # збираємо унікальних користувачів з обраного та чатів
+        users_from_favorites = Favorite.objects.filter(
+            listing=listing
+        ).values_list('user_id', flat=True)
+
+        users_from_chats = Conversation.objects.filter(
+            listing=listing
+        ).values_list('buyer_id', flat=True)
+
+        user_ids = set(list(users_from_favorites) + list(users_from_chats))
+        user_ids.discard(listing.user_id)  # продавця не сповіщаємо
+
+        for user_id in user_ids:
+            Notification.objects.create(
+                user_id=user_id,
+                type='listing_sold',
+                listing=listing,
+                text=f'Товар "{listing.title}" який вас цікавив — продано.'
+            )
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request

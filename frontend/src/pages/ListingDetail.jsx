@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { getListing, toggleFavorite, deleteListing } from '../api/listings'
+import { getListing, toggleFavorite, deleteListing, updateListing } from '../api/listings'
 import { useAuth } from '../context/AuthContext'
-import { startConversation } from '../api/chat'
+import { startConversation, sendMessage } from '../api/chat'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -34,8 +34,18 @@ export default function ListingDetail() {
 
   const handleChat = async () => {
     if (!user) return navigate('/login')
-     const res = await startConversation(id)
+    const res = await startConversation(id)
     navigate(`/chat?conv=${res.data.id}`)
+  }
+
+  const handleBuy = async () => {
+    if (!user) return navigate('/login')
+    try {
+      const res = await startConversation(id)
+      const convId = res.data.id
+      await sendMessage(convId, `Привіт! Мене цікавить ваш товар "${listing.title}" за ${Number(listing.price).toLocaleString()} ₴. Чи ще актуально?`)
+      navigate(`/chat?conv=${convId}`)
+    } catch {}
   }
 
   const handleDelete = async () => {
@@ -68,10 +78,7 @@ export default function ListingDetail() {
         <div className="detail-gallery">
           <div className="detail-gallery__main">
             {listing.images?.length > 0 ? (
-              <img
-                src={listing.images[activeImage]?.image}
-                alt={listing.title}
-              />
+              <img src={listing.images[activeImage]?.image} alt={listing.title} />
             ) : (
               <div className="detail-gallery__empty">Фото відсутнє</div>
             )}
@@ -102,6 +109,13 @@ export default function ListingDetail() {
 
           <h1 className="detail-title">{listing.title}</h1>
           <p className="detail-price">{Number(listing.price).toLocaleString()} ₴</p>
+
+          {listing.status === 'sold' && (
+            <div className="detail-status-sold">ПРОДАНО</div>
+          )}
+          {listing.status === 'archived' && (
+            <div className="detail-status-archived">В АРХІВІ</div>
+          )}
 
           <div className="detail-meta">
             <span>📍 {listing.city}</span>
@@ -139,24 +153,48 @@ export default function ListingDetail() {
           <div className="detail-actions">
             {!isOwner && (
               <>
+                <button className="btn btn--primary btn--full" onClick={handleBuy}>
+                  🛒 Купити
+                </button>
+                <button className="btn btn--outline btn--full" onClick={handleChat}>
+                  💬 Написати продавцю
+                </button>
                 <button
                   className={`btn ${favorited ? 'btn--favorited' : 'btn--outline'} btn--full`}
                   onClick={handleFavorite}
                 >
                   {favorited ? '❤️ В обраному' : '🤍 Додати в обране'}
                 </button>
-                <button className="btn btn--primary btn--full" onClick={handleChat}>
-                  💬 Написати продавцю
-                </button>
               </>
             )}
-
 
             {isOwner && (
               <div className="detail-owner-actions">
                 <Link to={`/listings/${id}/edit`} className="btn btn--outline btn--full">
                   Редагувати
                 </Link>
+                {listing.status === 'active' && (
+                  <button
+                    className="btn btn--outline btn--full"
+                    onClick={async () => {
+                      await updateListing(id, { status: 'sold' })
+                      setListing((prev) => ({ ...prev, status: 'sold' }))
+                    }}
+                  >
+                    ✅ Позначити як продано
+                  </button>
+                )}
+                {listing.status === 'sold' && (
+                  <button
+                    className="btn btn--outline btn--full"
+                    onClick={async () => {
+                      await updateListing(id, { status: 'active' })
+                      setListing((prev) => ({ ...prev, status: 'active' }))
+                    }}
+                  >
+                    🔄 Повернути в активні
+                  </button>
+                )}
                 <button
                   className="btn btn--danger btn--full"
                   onClick={handleDelete}
